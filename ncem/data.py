@@ -1816,35 +1816,34 @@ class DataLoader(GraphTools, PlottingTools):
         self.cell_type_coarseness = cell_type_coarseness
 
         # adding reading from buffered data
-        if self.buffered_data_path is None:
+        fn = f"{buffered_data_path}/buffered_data_{str(radius)}_{cell_type_coarseness}.pickle"
+        if os.path.isfile(fn) and not write_buffer:
+            print('Loading data from buffer')
+            with open(fn, 'rb') as f:
+                stored_data = pickle.load(f)
+        
+            self.celldata = stored_data["celldata"]
+            self.img_celldata = stored_data["img_celldata"]
+            # self.compute_adjacency_matrices(radius=radius, coord_type=coord_type, n_rings=n_rings)
+            self.radius = radius
+        # adding reading from buffered data
+        else:            
             print("Loading data from raw files")
             self.register_celldata(n_top_genes=n_top_genes)
             self.register_img_celldata()
             self.register_graph_features(label_selection=label_selection)
             self.compute_adjacency_matrices(radius=radius, coord_type=coord_type, n_rings=n_rings)
             self.radius = radius
-
+            
             if write_buffer: 
-                fn = f"{buffered_data_path}/buffered_data_{str(radius)}_{cell_type_coarseness}.pickle"
                 print('Buffering preprocessed input data')
                 data_to_store = {
-                    "celldata" = self.celldata,
-                    "img_celldata" = self.img_celldata,
+                    "celldata":self.celldata,
+                    "img_celldata": self.img_celldata,
                 }
                 with open(fn, 'wb') as f:
                     pickle.dump(obj=data_to_store, file=f)
-
-        else:
-            fn = f"{buffered_data_path}/buffered_data_{str(radius)}_{cell_type_coarseness}.pickle"
-            if os.path.isfile(fn):
-                print('Loading data from buffer')
-                with open(fn, 'rb') as f:
-                    stored_data = pickle.load(f)
             
-                self.celldata = stored_data["celldata"]
-                self.img_celldata = stored_data["img_celldata"]
-                # self.compute_adjacency_matrices(radius=radius, coord_type=coord_type, n_rings=n_rings)
-                self.radius = radius
 
         print(
             "Loaded %i images with complete data from %i patients "
